@@ -1,6 +1,9 @@
 import asyncio
 import re
+from datetime import timedelta
 from telethon import TelegramClient, events
+from telethon.tl.functions.channels import EditBannedRequest
+from telethon.tl.types import ChatBannedRights
 
 # Your credentials
 api_id = 24428962
@@ -25,9 +28,17 @@ async def main():
             chat = await event.get_chat()
             sender = await event.get_sender()
             try:
-                # Mute the user
-                await client.edit_permissions(chat, sender, send_messages=False)
-                await event.reply("بەخۆت عەلی ها، جاریکە جوونی نەدەی.")
+                # Mute the user for 5 minutes
+                mute_rights = ChatBannedRights(
+                    until_date=event.date + timedelta(minutes=5),
+                    send_messages=True
+                )
+                await client(EditBannedRequest(
+                    chat_id=chat.id,
+                    participant=sender.id,
+                    banned_rights=mute_rights
+                ))
+                await event.reply("Muted for 5 minutes ⏳")
             except Exception as e:
                 print("Failed to mute. Make sure the bot is admin with restrict permission.", e)
 
